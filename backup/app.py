@@ -28,6 +28,11 @@ gitOrgOrUser = os.getenv('GIT_ORG_OR_USER')
 gitHubUrl = 'https://{}:{}@github.com/{}'.format(gitUser.split('/')[3], gitToken, gitOrgOrUser)
 
 def clone(repoName):
+    """
+    Retrieves or Creates Code Commit Repository
+    :param repoName: Github Repository Name
+    :return: returns nothing
+    """
     localDir = f'/tmp/{repoName}'
     try:
         shutil.rmtree(localDir)
@@ -36,7 +41,7 @@ def clone(repoName):
     repoUrl = f"{gitHubUrl}/{repoName}.git"
     localRepo = Repo.clone_from(repoUrl, localDir)
     print(f'Cloned repo: {repoName}')
-    remoteRepo = getOrMakeRepo(repoName)
+    remoteRepo = getOrCreateRepo(repoName)
     print("Created remote repo")
     remote = localRepo.create_remote(name=remoteRepo['repositoryName'], url=remoteRepo['cloneUrlHttp'])
     print('Created remote')
@@ -44,17 +49,21 @@ def clone(repoName):
     print('Pushed to master')
 
 
-def getOrMakeRepo(repoName):
+def getOrCreateRepo(repoName):
+    """
+    Retrieves or Creates Code Commit Repository
+    :param repoName: Github Repository Name
+    :return: returns Code Commit Repo metadata
+    """
     try:
-        ccRepo = client.get_repository(repositoryName=repoName)
+        codeCommitRepo = client.get_repository(repositoryName=repoName)
     except client.exceptions.RepositoryDoesNotExistException:
-        ccRepo = client.create_repository(repositoryName=repoName)
+        codeCommitRepo = client.create_repository(repositoryName=repoName)
     except:
-        print("Somthing else has gone wrong accessing CodeCommit")
-        raise Exception("Somthing else has gone wrong accessing CodeCommit")
-
-    print(ccRepo)
-    return ccRepo['repositoryMetadata']
+        print("Error accessing CodeCommit Service!!!")
+        raise Exception("Error accessing CodeCommit Service!!!")
+    print(codeCommitRepo)
+    return codeCommitRepo['repositoryMetadata']
 
 
 # Verify the webhook signature
