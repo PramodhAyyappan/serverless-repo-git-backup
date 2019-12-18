@@ -25,7 +25,7 @@ gitToken = format(ssm.get_parameter(Name=GIT_TOKEN_SSM_PARAMETER_KEY, WithDecryp
 client = boto3.client('codecommit')
 os.environ['HOME'] = '/var/task'
 gitOrgOrUser = os.getenv('GIT_ORG_OR_USER')
-gitHubUrl = 'https://{}:{}@github.com/{}'.format(gitUser.split('/')[3], gitToken, gitOrgOrUser)
+gitHubUrl = f"https://{gitUser.split('/')[3]}:{gitToken}@github.com/{gitOrgOrUser}"
 
 def clone(repoName):
     """
@@ -91,7 +91,7 @@ def lambda_handler(event, context):
     verified = verify_signature(event['secret'],
                                 event['x_hub_signature'],
                                 event['payload'])
-    print('Signature verified: {}'.format(verified))
+    print(f'Signature verified: {verified}')
     if(verified):
         payload = json.loads(event['payload'])
         # Condition on the Basis of Event
@@ -102,4 +102,4 @@ def lambda_handler(event, context):
                 print(repoName)
                 clone(repoName)
             else:
-                print("No updates in Master brannch for this repo {}".format(payload['repository']['name']))
+                print(f"No updates in Master brannch for this repo {payload['repository']['name']}")
