@@ -20,6 +20,7 @@ This is a template for Serverless backup of all repositories in our Organization
 * AWS CLI already configured with Administrator permission
 * [Python 3 installed](https://www.python.org/downloads/)
 * `pip3 install aws-sam-cli`
+* [Set Up Lambda Layers](#aws-lambda-layers)
 
 ## Setup process
 
@@ -27,11 +28,15 @@ This is a template for Serverless backup of all repositories in our Organization
 
 ```yaml
 ...
+ ...
  Events:
-        TriggerScheduledEvent:
-          Type: Schedule
+        Serverless:
           Properties:
-            Schedule: rate(1 Day)
+            Method: post
+            Path: /github
+            RestApiId:
+              Ref: ServerlessAPI
+          Type: Api
 ```
 
 ## Packaging and deployment
@@ -46,6 +51,12 @@ AWS Lambda Python runtime requires a flat folder with all dependencies including
             ...
 ```
 
+## AWS Lambda Layers
+
+* Login into AWS Account
+* Go to this [link](https://github.com/aws-samples/aws-lambda-layer-awscli#option-2-deploy-from-sar-from-console-or-cli) and select a specific region and deploy.
+* For git binary we are going to use already existing layer `arn:aws:lambda:us-east-1:553035198032:layer:git:9`
+
 # SAM CLI commands
 
 ## Building the project
@@ -53,7 +64,7 @@ AWS Lambda Python runtime requires a flat folder with all dependencies including
 [AWS Lambda requires a flat folder](https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html) with the application as well as its dependencies in  deployment package. When you make changes to your source code or dependency manifest.
 
 ```bash
-sam build --base-dir <Absolute path with suffix /backup>
+sam build
 ```
 
 ## Create S3 bucket
@@ -77,7 +88,7 @@ sam deploy \
     --template-file packaged.yaml \
     --stack-name Serverless \
     --capabilities CAPABILITY_IAM \
-    --parameter-overrides NotificationEmail="<your email>"
+    --parameter-overrides NotificationEmail="<your email>" GitOrgOrUser="< Github User or Organisation>" GitTokenSSMParameterKey="<ssm parameter key for git access token>" VpcId="<vpc id>" VpcSubnetIds="<subnet id>"
 ```
 
 ## Describe Output section of CloudFormation stack previously created

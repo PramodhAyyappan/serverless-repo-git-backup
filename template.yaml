@@ -1,27 +1,108 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  AWS template to deploy Lambda function and API gateway
+
+Globals:
+  Function:
+    Timeout: 60
+
 Parameters:
   NotificationEmail:
     Type: String
+    Description: Email for Lambda failure notification
+  GitOrgOrUser:
+    Type: String
+    Description: Git Organization name or Username
+  GitTokenSSMParameterKey:
+    Type: String
+    Description: Github Access Token SSM Parameter Store Key
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC Id
+  VpcSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: VPC Subnet IDs that Lambda will us
 
 Resources:
-  GitBackup:
+  ServerlessGitBackupSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Lambda Security group"
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  ServerlessGitBackupFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: git-backup
+      VpcConfig:
+        SecurityGroupIds: 
+          - !Ref ServerlessGitBackupSecurityGroup
+        SubnetIds: !Ref VpcSubnetIds
       Handler: app.lambda_handler
       Runtime: python3.6
       MemorySize: 1024
       Timeout: 300
       Policies:
         - AWSCodeCommitPowerUser
+        - AmazonSSMReadOnlyAccess
+        - AWSLambdaVPCAccessExecutionRole
+        - AWSLambdaExecute
       Layers:
         - arn:aws:lambda:us-east-1:553035198032:layer:git:9
+        - arn:aws:lambda:us-east-1:221266418583:layer:serverlessrepo-lambda-layer-awscli:1
+      CodeUri: backup/
       Events:
-        GitBackupScheduledEvent:
-          Type: Schedule
+        Serverless:
           Properties:
-            Schedule: cron(0 18 ? * FRI *)
+            Method: post
+            Path: /github
+            RestApiId:
+              Ref: ServerlessAPI
+          Type: Api
+      Environment:
+        Variables:
+          GIT_ORG_OR_USER: !Ref GitOrgOrUser
+          GIT_TOKEN_SSM_PARAMETER_KEY: !Ref GitTokenSSMParameterKey
+
+  ServerlessAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      DefinitionBody:
+        swagger: '2.0'
+        info:
+          version: '2017-04-20T04:08:08Z'
+          title:
+            Ref: AWS::StackName
+        basePath: "/"
+        schemes:
+        - https
+        paths:
+          "/github":
+            post:
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ServerlessGitBackupFunction.Arn}/invocations
+                passthroughBehavior: when_no_templates
+                httpMethod: POST
+                requestTemplates:
+                  application/json: >
+                    {
+                      "x_github_delivery": "$util.escapeJavaScript($input.params().header.get('X-GitHub-Delivery'))",
+                      "x_github_event": "$util.escapeJavaScript($input.params().header.get('X-GitHub-Event'))",
+                      "x_hub_signature": "$util.escapeJavaScript($input.params().header.get('X-Hub-Signature'))",
+                      "secret": "testwebhookapi4236246duye37d",
+                      "payload": "$util.base64Encode($input.body)"
+                    }
+                contentHandling: CONVERT_TO_TEXT
+                type: aws
 
   AlarmTopic:
     Type: AWS::SNS::Topic
@@ -38,10 +119,18 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
         - Name: FunctionName
-          Value: !Ref GitBackup
+          Value: !Ref ServerlessGitBackupFunction
       EvaluationPeriods: 1
       MetricName: Errors
       Namespace: AWS/Lambda
       Period: 60
       Statistic: Sum
       Threshold: '1'
+
+Outputs:
+  ServerlessApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessAPI}.execute-api.${AWS::Region}.amazonaws.com/prod/github/"
+  ServerlessFunction:
+    Description: "ARN of Lambda Function"
+    Value: !GetAtt ServerlessGitBackupFunction.Arn
