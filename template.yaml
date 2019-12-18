@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  NotificationEmail:
+    Type: String
+
+Resources:
+  GitBackup:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: git-backup
+      Handler: app.lambda_handler
+      Runtime: python3.6
+      MemorySize: 1024
+      Timeout: 300
+      Policies:
+        - AWSCodeCommitPowerUser
+      Layers:
+        - arn:aws:lambda:us-east-1:553035198032:layer:git:9
+      Events:
+        GitBackupScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 18 ? * FRI *)
+
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+      - Protocol: email
+        Endpoint: !Ref NotificationEmail
+
+  Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Ref AlarmTopic
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref GitBackup
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: '1'
