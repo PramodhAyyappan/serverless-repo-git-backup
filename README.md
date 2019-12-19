@@ -17,7 +17,7 @@ This is a template for Serverless backup of all repositories in our Organization
 
 ## Requirements
 
-* Add GitHub Token to SSM Parameter with name
+* Add GitHub Token to SSM Parameter store with name
 
     ```bash
     /GitHub/Token/< Github Username or Organization Name>
