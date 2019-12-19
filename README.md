@@ -5,7 +5,7 @@ This is a template for Serverless backup of all repositories in our Organization
 ```bash
 .
 ├── README.md                   <-- This instructions file
-├── backup                     <-- Source code for a lambda function
+├── backup                      <-- Source code for a lambda function
 │   ├── app.py                  <-- Lambda function code
 │   ├── requirements.txt        <-- Lambda function code
 ├── template.yaml               <-- SAM Template
@@ -16,6 +16,14 @@ This is a template for Serverless backup of all repositories in our Organization
 ```
 
 ## Requirements
+
+* Add GitHub Token to SSM Parameter with name
+
+    ```bash
+    /GitHub/Token/< Github Username or Organization Name>
+
+    Example: /GitHub/Token/Flux7Labs
+    ```
 
 * AWS CLI already configured with Administrator permission
 * [Python 3 installed](https://www.python.org/downloads/)

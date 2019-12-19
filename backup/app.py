@@ -102,4 +102,4 @@ def lambda_handler(event, context):
                 print(repoName)
                 clone(repoName)
             else:
-                print(f"No updates in Master brannch for this repo {payload['repository']['name']}")
+                print(f"No updates in Master branch for this repo {payload['repository']['name']}")
