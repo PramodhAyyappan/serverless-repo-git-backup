@@ -22,7 +22,7 @@ This is a template for Serverless backup of all repositories in our Organization
     ```bash
     /GitHub/Token/< Github Username or Organization Name>
 
-    Example: /GitHub/Token/Flux7Labs
+    Example: /GitHub/Token/pramodh-ayyappan
     ```
 
 * AWS CLI already configured with Administrator permission
