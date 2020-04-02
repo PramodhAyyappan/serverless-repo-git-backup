@@ -12,8 +12,8 @@ import shutil
 # Get the SSM Parameter Keys
 try:
     GIT_TOKEN_SSM_PARAMETER_KEY = os.getenv('GIT_TOKEN_SSM_PARAMETER_KEY')
-except Exception:
-    GIT_TOKEN_SSM_PARAMETER_KEY = '/GitHub/Token/PramodhAyyappan'
+except Exception as e:
+    print(f'Error: {e}')
 
 # Get ssm module
 ssm = boto3.client('ssm')

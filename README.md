@@ -63,7 +63,9 @@ AWS Lambda Python runtime requires a flat folder with all dependencies including
 
 * Login into AWS Account
 * Go to this [link](https://github.com/aws-samples/aws-lambda-layer-awscli#option-2-deploy-from-sar-from-console-or-cli) and select a specific region and deploy.
-* For git binary we are going to use already existing layer `arn:aws:lambda:us-east-1:553035198032:layer:git:9`
+* Now copy generated AWS CLI Lambda Layer ARN and paste it in this file [template.yaml](template.yaml) at line 59.
+* For git binary we are going to use already existing layer `arn:aws:lambda:us-east-1:553035198032:layer:git:10`
+
 
 # SAM CLI commands
 
