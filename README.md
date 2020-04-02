@@ -1,6 +1,6 @@
 # Serverless
 
-This is a template for Serverless backup of all repositories in our Organization to AWS Code Commit - Below is a brief explanation of what we have generated for you:
+This is a template for Serverless backup of all repositories from Organization/User to AWS Code Commit - Below is a brief explanation of what I have generated for you:
 
 ```bash
 .
